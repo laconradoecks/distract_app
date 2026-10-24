@@ -35,29 +35,26 @@ ln -s /etc/nginx/sites-available/distractapp /etc/nginx/sites-enabled/distractap
 nginx -t && systemctl reload nginx
 ```
 
-**Test URL (before DNS):** http://distractapp.138.197.117.174.sslip.io
+**Test URL (HTTP only):** http://distractapp.138.197.117.174.sslip.io
 
 The bare IP can't be used for this site: yosaki's nginx config already claims `138.197.117.174` as a server name.
 sslip.io is public wildcard DNS that resolves that hostname to the droplet IP, so nginx can route it here.
 
-## DNS (when the domain is ready)
+## Live: https://distractapp.com
 
-At your domain registrar (or DigitalOcean → Networking → Domains), point the domain at the droplet:
+Went live 2026-10-24. DNS is at Namecheap (BasicDNS) with A records `@` and `www` → `138.197.117.174`.
 
-| Type | Name  | Value           |
-|------|-------|-----------------|
-| A    | `@`   | 138.197.117.174 |
-| A    | `www` | 138.197.117.174 |
-
-Then, on the droplet, add the domain to the site and get HTTPS:
+On the droplet, the domain was added to the site and HTTPS issued:
 
 ```bash
-sed -i 's/server_name distractapp.138.197.117.174.sslip.io;/server_name yourdomain.com www.yourdomain.com distractapp.138.197.117.174.sslip.io;/' /etc/nginx/sites-available/distractapp
+sed -i 's/server_name distractapp.138.197.117.174.sslip.io;/server_name distractapp.com www.distractapp.com distractapp.138.197.117.174.sslip.io;/' /etc/nginx/sites-available/distractapp
 nginx -t && systemctl reload nginx
-certbot --nginx -d yourdomain.com -d www.yourdomain.com
+certbot --nginx --non-interactive --redirect -d distractapp.com -d www.distractapp.com
 ```
 
-Finally, click **Verify** in Pinterest.
+Certbot now manages the live file `/etc/nginx/sites-available/distractapp` (HTTPS block + HTTP→HTTPS redirect) and renews
+the certificate automatically. Edit that file on the server directly; `deploy/nginx/distractapp.conf` is only the starting template.
+Backup of the pre-certbot config: `/root/distractapp.nginx.bak`.
 
 ## Updating
 

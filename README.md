@@ -25,35 +25,43 @@ The file `pinterest-86414.html` is also served at `https://DOMAIN/pinterest-8641
 
 ## First-time setup on the droplet
 
-The droplet already runs another project, so this adds a second nginx site next to it.
+Hosted on the **yosaki** droplet (`138.197.117.174`, NYC3) next to yosaki.com. Done on 2026-10-24:
 
 ```bash
-ssh root@DROPLET_IP
-sudo git clone https://github.com/laconradoecks/distract_app.git /var/www/distractapp
-sudo cp /var/www/distractapp/deploy/nginx/distractapp.conf /etc/nginx/sites-available/distractapp
-sudo sed -i 's/DOMAIN_HERE/yourdomain.com/g' /etc/nginx/sites-available/distractapp
-sudo ln -s /etc/nginx/sites-available/distractapp /etc/nginx/sites-enabled/distractapp
-sudo nginx -t && sudo systemctl reload nginx
+git clone https://github.com/laconradoecks/distract_app.git /var/www/distractapp
+cp /var/www/distractapp/deploy/nginx/distractapp.conf /etc/nginx/sites-available/distractapp
+sed -i 's/server_name DOMAIN_HERE www.DOMAIN_HERE;/server_name distractapp.138.197.117.174.sslip.io;/' /etc/nginx/sites-available/distractapp
+ln -s /etc/nginx/sites-available/distractapp /etc/nginx/sites-enabled/distractapp
+nginx -t && systemctl reload nginx
 ```
 
-## DNS
+**Test URL (before DNS):** http://distractapp.138.197.117.174.sslip.io
+
+The bare IP can't be used for this site: yosaki's nginx config already claims `138.197.117.174` as a server name.
+sslip.io is public wildcard DNS that resolves that hostname to the droplet IP, so nginx can route it here.
+
+## DNS (when the domain is ready)
 
 At your domain registrar (or DigitalOcean → Networking → Domains), point the domain at the droplet:
 
-| Type | Name  | Value       |
-|------|-------|-------------|
-| A    | `@`   | DROPLET_IP  |
-| A    | `www` | DROPLET_IP  |
+| Type | Name  | Value           |
+|------|-------|-----------------|
+| A    | `@`   | 138.197.117.174 |
+| A    | `www` | 138.197.117.174 |
 
-Then, once `http://yourdomain.com` loads the page, add HTTPS:
+Then, on the droplet, add the domain to the site and get HTTPS:
 
 ```bash
-sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
+sed -i 's/server_name distractapp.138.197.117.174.sslip.io;/server_name yourdomain.com www.yourdomain.com distractapp.138.197.117.174.sslip.io;/' /etc/nginx/sites-available/distractapp
+nginx -t && systemctl reload nginx
+certbot --nginx -d yourdomain.com -d www.yourdomain.com
 ```
+
+Finally, click **Verify** in Pinterest.
 
 ## Updating
 
 ```bash
 git push
-DROPLET=root@DROPLET_IP ./deploy/deploy.sh
+DROPLET=root@138.197.117.174 ./deploy/deploy.sh   # needs SSH key access, or run `git -C /var/www/distractapp pull` in the DO web console
 ```

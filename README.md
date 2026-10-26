@@ -6,6 +6,8 @@ Static, single-file landing page ("Take a break from reality"), served by nginx 
 public/                 # everything nginx serves
   index.html            # the landing page (fonts/images bundled inside)
   pinterest-86414.html  # Pinterest verification file (backup method)
+  privacy/index.html    # privacy policy (served at /privacy/)
+  robots.txt, sitemap.xml
 deploy/
   nginx/distractapp.conf          # nginx server block (starting template)
   nginx/waitlist-locations.conf   # /api/waitlist + password-protected /admin/
@@ -67,6 +69,10 @@ Both email forms POST to `/api/waitlist`, which nginx forwards to a small Python
 Duplicates are ignored, a hidden honeypot field drops bots, and nginx rate-limits each IP.
 
 **Download the list:** open https://distractapp.com/admin/, sign in, click **Download CSV**.
+**Remove someone:** on the same page, search for the email and click **Remove** (for unsubscribe or deletion requests).
+
+Privacy requests go to privacy@distractapp.com (a Namecheap email forward; see Namecheap → Domain → Redirect Email).
+The policy is at `public/privacy/index.html`; update its date and wording if what's collected changes.
 
 Install (as root on the droplet):
 

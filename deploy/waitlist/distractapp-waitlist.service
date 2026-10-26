@@ -1,0 +1,21 @@
+# systemd unit for the waitlist API.
+# Install: cp /var/www/distractapp/deploy/waitlist/distractapp-waitlist.service /etc/systemd/system/
+#          systemctl daemon-reload && systemctl enable --now distractapp-waitlist
+[Unit]
+Description=DistractApp waitlist API
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 -I /var/www/distractapp/deploy/waitlist/app.py
+Environment=WAITLIST_DB=/var/lib/distractapp/waitlist.db
+# Runs as a throwaway unprivileged user; the database lives in /var/lib/distractapp.
+DynamicUser=yes
+StateDirectory=distractapp
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+NoNewPrivileges=yes
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
